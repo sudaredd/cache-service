@@ -18,7 +18,7 @@ public class CronJob {
 private ThreadPoolTaskScheduler threadPoolTaskScheduler;
 
 //    @Scheduled(cron = "00 26 8,14,17,23 * * *")
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 50000)
     public void runCron() {
         log.info("running job at "+ Thread.currentThread().getName());
         ScheduledThreadPoolExecutor scheduledExecutor = (ScheduledThreadPoolExecutor) threadPoolTaskScheduler.getScheduledExecutor();

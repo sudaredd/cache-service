@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RFuture;
 import org.redisson.api.RLock;
 import org.redisson.api.RMap;
+import org.redisson.api.RMapCache;
 import org.redisson.api.RPriorityQueue;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.PriorityQueue;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -46,18 +48,15 @@ public class RedissonDAO<K, V extends CachePayLoad> {
     }
 
     public boolean addInPriorityQueue(String redisHash, V object) {
-        RMap<String, Object> rMap = redisson.getMap(redisHash);
+        RMapCache<String, Object> rMap = redisson.getMapCache(redisHash);
         RLock lock = rMap.getLock(object.getKey());
         try {
             lock.lock();
             log.info("current running thread::"+Thread.currentThread().getName());
             RPriorityQueue queue = (RPriorityQueue) rMap.get(object.getKey());
             if (Objects.isNull(queue)) {
-                queue = redisson.getPriorityQueue(object.getKey());
-                if (!(object instanceof Comparable)) {
-                    queue.trySetComparator((Comparator<V>) (o1, o2) -> o1.getKey().compareTo(o2.getKey()) + Long.compare(o1.getTimestamp(), o2.getTimestamp()));
-                }
-                rMap.put(object.getKey(), queue);
+                queue = redisson.getPriorityBlockingQueue(object.getKey());
+                rMap.put(object.getKey(), queue, 24, TimeUnit.HOURS);
             }
             queue.offer(object);
         } finally {

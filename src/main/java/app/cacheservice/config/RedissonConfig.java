@@ -13,13 +13,15 @@ public class RedissonConfig {
 
     @Bean
     public RedissonClient redissonClient() {
-        Config config = new Config();
+       Config config = new Config();
         config
             .useSingleServer()
-            .setAddress("redis://127.0.0.1:6380")
-        .setConnectTimeout(3000);
+            .setAddress("redis://127.0.0.1:6379")
+        .setConnectTimeout(3000)
+        .setRetryAttempts(3);
         config.setThreads(5);
         config.setNettyThreads(5);
+
 
         return Redisson.create(config);
     }
